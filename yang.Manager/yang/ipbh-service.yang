@@ -1,0 +1,128 @@
+module ipbh-service {
+    namespace "urn:opendaylight:params:xml:ns:yang:ipbh-service";
+    prefix "ipsvc";
+    
+    import ipbh-common {
+    	prefix "ipcm";
+    	revision-date 2015-01-05;
+    }
+
+	organization
+		"mobigen.com";
+	contact
+		"Creator: Shoner Sul <mailto:sosul@mobigen.com>";
+	description
+		"NBI model for create services";
+
+	revision "2015-01-05" {
+	    description "Initial revision";
+	}
+
+	grouping endpoint {
+		leaf node-name {
+			type string;
+			mandatory true;
+			description "Name of endpoint device";
+		}
+		leaf port-name {
+			type string;
+			mandatory true;
+			description "Name of endpoint port";
+		}
+		leaf user-label {
+			type string;
+			description "Remark for endpoint";
+		}
+		leaf l2-access-type {
+			type string;
+			mandatory true;
+			description "port / dot1q";
+		}
+		leaf vlan-id {
+			type uint16 {
+				range "1..4094";
+			}
+			description "Effective only when l2-accss-type = dot1q";
+		}
+		leaf l3-pe-gateway {
+			type string;
+			description "Gateway IP/subnet in form of xxx.xxx.xxx.xxx/24";
+		}
+	}
+	
+	grouping tunnel-service {
+		leaf type {
+			type string;
+			mandatory true;
+			description "auto-select / auto-create / bind-tunnel";
+		}
+		leaf load-balance-number {
+			type uint16 {
+				range "1..64";
+			}
+			description "Determines how many tunnels are used for this service for load balancing (1 ~ 64).
+				Effective for auto-select only.";
+		}
+		list binding-tunnels {
+			uses binding-tunnel;
+		}
+	}
+	
+	grouping binding-tunnel {
+		leaf tunnel-name {
+			type string;
+			mandatory true;
+			description "Name of tunnel to be used";
+		}
+		leaf start-node {
+			type string;
+			mandatory true;
+			description "Start node of tunnel";
+		}
+		leaf end-node {
+			type string;
+			mandatory true;
+			description "End node of tunnel";
+		}
+	}
+	
+	grouping service {
+		description "Body of created/modified service";
+		leaf name {
+			type string;
+			mandatory true;
+			description "Name of Service";
+		}
+		leaf type {
+			type string;
+			mandatory true;
+			description "l3vpn / l2vpn";
+		}
+		list endpoints {
+			uses endpoint;
+		}
+		container tunnel-service {
+			uses tunnel-service;
+		}
+	}
+
+	rpc create-service {
+		description "API used for create a new service";
+		input {
+			uses service;
+		}
+		output {
+			uses ipcm:general-output;
+		}
+	}
+	
+	rpc update-service {
+		description "API used for modify an existing service";
+		input {
+			uses service;
+		}
+		output {
+			uses ipcm:general-output;
+		}
+	}
+}

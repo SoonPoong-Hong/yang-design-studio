@@ -1,0 +1,70 @@
+module ipbh-te {
+	yang-version 1;
+	namespace "urn:opendaylight:params:xml:ns:yang:ipbh-te";
+	prefix "ipte";
+	
+    import ipbh-common {
+    	prefix "ipcm";
+    	revision-date 2015-01-05;
+    }
+
+	organization
+		"mobigen.com";
+	contact
+		"Creator: Shoner Sul <mailto:sosul@mobigen.com>";
+	description
+		"NBI model for modifying TE attributes";
+
+	revision "2015-01-05" {
+	    description "Initial revision";
+	}
+
+	rpc update-node {
+		description "RPC to update TE attribute of node";
+		input {
+			leaf lsr-id {
+				type string;
+				mandatory true;
+				description "IP address of source node";
+			}
+			leaf latency {
+				type int32;
+				description "New latency value";
+			}
+		}
+		output {
+			uses ipcm:general-output;
+		}
+	}
+
+	rpc update-link {
+		description "RPC to update TE attribute of link";
+		input {
+			leaf src-ip {
+				type string;
+				mandatory true;
+				description "IP address of source port";
+			}
+			leaf dst-ip {
+				type string;
+				mandatory true;
+				description "IP address of destination port";
+			}
+			leaf latency {
+				type int32;
+				description "New latency value";
+			}
+			leaf cost {
+				type int32;
+				description "New cost value";
+			}
+			leaf bandwidth {
+				type int32;
+				description "New bandwidth value";
+			}
+		}
+		output {
+			uses ipcm:general-output;
+		}
+	}
+}

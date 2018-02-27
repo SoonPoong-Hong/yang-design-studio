@@ -1,0 +1,21 @@
+// Contents of "ipbh-common"
+module ipbh-common {
+    namespace "urn:opendaylight:ipbh-common";
+    prefix "ipcm";
+
+	revision "2015-01-05" {
+	    description "Initial revision of ipbh model";
+	}
+
+	grouping general-output {
+		description "General output with error code and message";
+		leaf code {
+			type int32;
+			description "Error code. 0 for OK";
+		}
+		leaf message {
+			type string;
+			description "Error message in case of error";
+		}
+	}
+}

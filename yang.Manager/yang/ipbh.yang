@@ -1,0 +1,73 @@
+module ipbh {
+	yang-version 1;
+	namespace "urn:opendaylight:params:xml:ns:yang:ipbh";
+	prefix "ipbh";
+
+	revision "2015-01-05" {
+	    description "Initial revision of ipbh model";
+	}
+
+	container collector-state {
+		list run-history {
+			config false;
+			max-elements "64";
+			description "history of data collection";
+			leaf ems-id {
+				type string;
+				description "EMS/NMS ID where data collection finished";
+			}
+			leaf start-time {
+				type int64;
+				description "time when data collection started, in form of milliseconds for System.currentTimeMillis()";
+			}
+			leaf finished-time {
+				type int64;
+				description "time when data collection finished, in form of milliseconds for System.currentTimeMillis()";
+			}
+		}
+	}
+
+	rpc collect {
+		description "RPC to force collection";
+		input {
+			leaf ems-id {
+				type string;
+				mandatory true;
+				description "specifies which EMS/NMS data shall be collected";
+			}
+			leaf collect-inventory {
+				type boolean;
+				default true;
+				description "include inventory data";
+			}
+			leaf collect-topology {
+				type boolean;
+				default true;
+				description "include topology data";
+			}
+			leaf collect-service {
+				type boolean;
+				default true;
+				description "include service data";
+			}
+		}
+		output {
+			leaf result {
+				type string;
+				description "OK or error message";
+			}
+		}
+	}
+
+	notification collection-finished {
+		leaf ems-id {
+			type string;
+			description "EMS/NMS ID where data collection finished";
+		}
+
+		leaf finished-time {
+			type int64;
+			description "time when data collection finished, in form of milliseconds for System.currentTimeMillis()";
+		}
+	}
+}

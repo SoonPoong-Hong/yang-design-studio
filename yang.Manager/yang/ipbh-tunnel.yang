@@ -1,0 +1,141 @@
+module ipbh-tunnel {
+	yang-version 1;
+	namespace "urn:opendaylight:params:xml:ns:yang:ipbh-tunnel";
+	prefix "iptnl";
+	
+    import ipbh-common {
+    	prefix "ipcm";
+    	revision-date 2015-01-05;
+    }
+
+	organization
+		"mobigen.com";
+	contact
+		"Creator: Shoner Sul <mailto:sosul@mobigen.com>";
+	description
+		"NBI model for generating IP tunnel";
+
+	revision "2015-01-05" {
+	    description "Initial revision";
+	}
+
+	grouping tunnel {
+		leaf tunnel-name {
+			type string {
+				length "1..64";
+			}
+			mandatory true;
+			description "name of tunnel to generate";
+		}
+		leaf src-ip {
+			type string;
+			mandatory true;
+			description "lsr-id of source node";
+		}
+		leaf dst-ip {
+			type string;
+			mandatory true;
+			description "lsr-id of destination node";
+		}
+		leaf bandwidth {
+			type int32;
+			default 0;
+			description "bandwidth limit of tunnel in kbit/s (0 ~ 2000000000), 0 by default";
+		}
+		leaf priority {
+			type int8 {
+				range "0..7";
+			}
+			default 0;
+			description "setup priority of tunnel (0 ~ 7)";
+		}
+		leaf admin-status {
+			type string;
+			description "desired tunnel status (UP/DOWN)";
+		}
+		leaf protection {
+			type string;
+			default false;
+			description "whether tunnel supports protection or not (true/false)";
+		}
+		container working-path-setup {
+			uses path-setup;
+			description "path setup for working path";
+		}
+		container protection-path-setup {
+			uses path-setup;
+			description "path setup for protection path";
+		}
+	}
+
+	grouping ip-link {
+		leaf src-ip {
+			type string;
+			mandatory true;
+			description "IP address of source port";
+		}
+		leaf dst-ip {
+			type string;
+			mandatory true;
+			description "IP address of destination port";
+		}
+	}
+	
+	grouping path-setup {
+		list include-link {
+			uses ip-link;
+			description "links to be included in the calculated path";
+		}
+		list exclude-link {
+			uses ip-link;
+			description "links to be excluded from the calculated path";
+		}
+	}
+	
+	rpc create-tunnel {
+		description "RPC to create a tunnel";
+		input {
+			uses tunnel;
+		}
+		output {
+			uses ipcm:general-output;
+		}
+	}
+
+	rpc modify-tunnel {
+		description "RPC to modify some tunnel attributes";
+		input {
+			uses tunnel;
+		}
+		output {
+			uses ipcm:general-output;
+		}
+	}
+	
+	rpc delete-tunnel {
+		description "RPC to delete a tunnel";
+		input {
+			leaf tunnel-name {
+				type string;
+				mandatory true;
+				description "name of tunnel to generate";
+			}
+		}
+		output {
+			uses ipcm:general-output;
+		}
+	}
+	
+	rpc synchronize {
+		description "reload Tunnel/LSP data to update DB";
+		input {
+			leaf tunnel-name {
+				type string;
+				description "null for all tunnel";
+			}
+		}
+		output {
+			uses ipcm:general-output;
+		}
+	}
+}

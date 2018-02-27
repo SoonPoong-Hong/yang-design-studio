@@ -1,0 +1,1658 @@
+module ipbh-netconf {
+	namespace "urn:opendaylight:params:xml:ns:yang:ipbh-netconf";
+	prefix "ipnc";
+
+	import ipbh-common {
+		prefix "ipcm";
+		revision-date 2015-01-05;
+	}
+
+	organization
+		"mobigen.com";
+	contact
+		"Creator: Shoner Sul <mailto:sosul@mobigen.com>";
+	description
+		"NBI model for query/update NETCONF data of device";
+
+	revision "2015-01-05" {
+		description "Initial revision";
+	}
+
+	/* identity check-result-type {
+		description "Result of check-default-cfg";
+	}
+	identity check-result-ok {
+		base check-result-type;
+	}
+	identity check-result-missing {
+		base check-result-type;
+	}
+	identity check-result-mismatch {
+		base check-result-type;
+	} */
+
+	grouping rtp {
+		leaf tunnel-selector {
+			type string;
+			mandatory true;
+			description "Name of tunnel selector";
+		}
+		leaf tunnel-policy {
+			type string;
+			mandatory true;
+			description "Name of tunnel policy, must have been input by CLI";
+		}
+		leaf match-mode {
+			type string;
+			description "permit or deny";
+		}
+		leaf node-sequence {
+			type int32;
+			description "node count for match";
+		}		
+	}
+
+	grouping bfd {
+		leaf enabled {
+			type boolean;
+			mandatory true;
+			description "whether enable or disable bfd feature";
+		}
+	}
+
+	grouping bgp {
+		description "BGP configuration";
+		reference "huawei-bgp-bgpcomm.yang";
+		leaf enabled {
+			type boolean;
+			mandatory true;
+			description "whether enable or disable bgp feature";
+		}
+		leaf as-number {
+			type uint32 {
+//				length "1..11";
+			}
+			description "AS Number of BGP network";
+		}
+		leaf lsr-id {
+			type string;
+			description "Router ID in IP addres form";
+		}
+		leaf keepalive-time {
+			type uint32 {
+				range "0..21845";
+			}
+			description "keepalive time in seconds";
+		}
+		leaf hold-time {
+			type uint32 {
+				range "0..65535";
+			}
+			description "hold time in seconds";
+		}
+		list peers {
+			uses bgp-peer;
+		}
+	}
+
+	grouping bgp-peer {
+		leaf ip-address {
+			type string;
+			description "IP address of peer node";
+		}
+		leaf remote-as {
+			type uint32 {
+//				length "1..11";
+			}
+			description "AS Number of peer node";
+		}
+		leaf if-name {
+			type string;
+			description "Interface sending/receiving BGP packets. SKT uses LoopBack0";
+		}
+		leaf reflect-client {
+			type boolean;
+			description "reflect-client";
+		}
+		leaf next-hop-local {
+			type boolean;
+			description "next-hop-local.
+				Set peerAF.nextHopConfigure=local in edit-config, but it is not queried by get-config.";
+		}
+		leaf remove {
+			type boolean;
+			description "remove-confirm-YN";
+		}
+	}
+
+	grouping vpn {
+		leaf name {
+			type string;
+			description "Name of VPN service";
+		}
+		leaf tunnel-policy {
+			type string;
+			description "Name of tunnel-policy to be applied. Must have been set in device using CLI.";
+		}
+		leaf route-distinguisher {
+			type string;
+			description "RD";
+		}
+		leaf rt-export-extcomm {
+			type string;
+			description "Route Target for export external-community";
+		}
+		leaf rt-import-extcomm {
+			type string;
+			description "Route Target for import external-community";
+		}
+		leaf apply-label {
+			type string;
+			description "per-instance / per-route";
+		}
+		leaf ttl-mode {
+			type string;
+			description "uniform / pipe";
+		}
+		container bgp {
+			leaf import-route-direct {
+				type boolean;
+				description "for CLI command import-route direct";
+			}
+			leaf import-route-static {
+				type boolean;
+				description "for CLI command import-route static";
+			}
+			leaf default-route-imported {
+				type boolean;
+				description "for CLI command default-route imported";
+			}
+			leaf auto-frr {
+				type boolean;
+				description "for CLI command auto-frr";
+			}
+		}
+		leaf remove {
+			type boolean;
+			description "remove-confirm-YN";
+		}
+	}
+
+	grouping vpn-ifs {
+		list vpn-if-list {
+			uses vpn-if;
+		}
+	}
+
+	grouping vpn-if {
+		leaf if-name {
+			type string;
+			description "Name of port or interface";
+		}
+		leaf use-port {
+			type string;
+			description "port to use";
+		}
+		leaf ip-address {
+			type string;
+			description "IP address to assign";
+		}
+		leaf subnet-mask {
+			type string;
+			description "Subnet mask to assign";
+		}
+		leaf description {
+			type string;
+			description "Desription of port or interface";
+		}
+		leaf remove {
+			type boolean;
+			description "remove-confirm-YN";
+		}
+	}
+
+	grouping acl {
+		list acl-groups {
+			uses acl-group;
+		}
+	}
+
+	grouping rule-bas4 {
+		leaf rule-id {
+			type uint32;
+			mandatory true;
+			description "ID of Basic ACL Rule";
+		}
+		leaf rule-name {
+			type string;
+			description "Name of Basic ACL Rule
+				In form of rule_(id) if not set";
+		}
+		leaf action {
+			type string;
+			mandatory true;
+			description "Action for ACL Rule, permit or deny";
+		}
+		leaf source-ip {
+			type string;
+			description "Source IP address";
+		}
+		leaf source-mask {
+			type string;
+			description "Subnet mask for source IP address";
+		}
+		leaf remove {
+			type boolean;
+			description "remove-confirm-YN";
+		}
+	}
+
+	grouping rule-adv4 {
+		leaf rule-id {
+			type uint32;
+			mandatory true;
+			description "ID of Basic ACL Rule";
+		}
+		leaf rule-name {
+			type string;
+			description "Name of Basic ACL Rule
+				In form of rule_(id) if not set";
+		}
+		leaf action {
+			type string;
+			mandatory true;
+			description "Action for ACL Rule, permit or deny";
+		}
+		leaf protocol {
+			type string;
+			mandatory true;
+			description "Protocol to apply rule
+				any(0), icmp(1), igmp(2), ipinip(4), tcp(6), udp(17), gre(47), ospf(89)";
+		}
+		leaf source-ip {
+			type string;
+			description "Source IP address";
+		}
+		leaf source-mask {
+			type string;
+			description "Subnet mask for source IP address";
+		}
+		leaf dest-ip {
+			type string;
+			description "Destination IP address";
+		}
+		leaf dest-mask {
+			type string;
+			description "Subnet mask for destination IP address";
+		}
+		leaf source-port-op {
+			type string;
+			description "Range type
+				eq, neq, lt, gt, range";
+		}
+		leaf source-port-begin {
+			type uint16 {
+				range "0..65535";
+			}
+			description "Smallest number of range or compared value for eq/neq
+				Convert text input to number as following 
+				biff(512), bootpc(68), bootps(67), discard(9) dns(53),
+				dnsix(90), echo(7), mobilip-ag(434), mobilip-mn(435), nameserver(42),
+				netbios-dgm(138), netbios-ns(137), netbios-ssn(139),
+				ntp(123), rip(520), snmp(161), snmptrap(162), sunrpc(111),
+				syslog(514), tacacs-ds(65), talk(517), tftp(69), time(37),
+				who(513), xdmcp(177)";
+		}
+		leaf source-port-end {
+			type uint16 {
+				range "0..65535";
+			}
+			description "Bigest number of range";
+		}
+		leaf dest-port-op {
+			type string;
+			description "Range type
+				eq, neq, lt, gt, range";
+		}
+		leaf dest-port-begin {
+			type uint16 {
+				range "0..65535";
+			}
+			description "Smallest number of range or compared value for eq/neq";
+		}
+		leaf dest-port-end {
+			type uint16 {
+				range "0..65535";
+			}
+			description "Bigest number of range";
+		}
+		leaf remove {
+			type boolean;
+			description "remove-confirm-YN";
+		}
+	}
+
+	grouping acl-group {
+		leaf name {
+			type string;
+			mandatory true;
+			description "Name of ACL group";
+		}
+		leaf description {
+			type string;
+			description "Description for ACL group";
+		}
+		leaf type {
+			type string;
+			description "Type of ACL group.
+				acl4GroupType = {Interface, Link, Basic, Advance, Mpls, User, Arp}
+				acl6GroupType = {Basic, Advance, Interface}";
+		}
+		list rules-bas4 {
+			uses rule-bas4;
+		}
+		list rules-adv4 {
+			uses rule-adv4;
+		}
+		leaf remove {
+			type boolean;
+			description "remove-confirm-YN";
+		}
+	}
+
+	grouping qos {
+		list policies {
+			uses qos-policy;
+		}
+		list classifiers {
+			uses qos-classifier;
+		}
+		list behaviors {
+			uses qos-behavior;
+		}
+	}
+
+	grouping qos-policy {
+		leaf name {
+			type string;
+			mandatory true;
+			description "Name of QoS Policy";
+		}
+		list policy-nodes {
+			key "classifier-name";
+			max-elements "256";
+			uses qos-policy-node;
+		}
+		leaf remove {
+			type boolean;
+			description "remove-confirm-YN";
+		}
+	}
+
+	grouping qos-policy-node {
+		description "Mapping between classifiers and behaviors.";
+		leaf priority {
+			type uint16 {
+				range "1..5119";
+			}
+			description "Priority of classifier-behavior mapping.";
+		}
+		leaf classifier-name {
+			type string {
+				length "1..31";
+			}
+			description "Name of Traffic Classifier";
+		}
+		leaf behavior-name {
+			type string {
+				length "1..31";
+			}
+			description "Name of Traffic Behavior";
+		}
+		leaf remove {
+			type boolean;
+			description "remove-confirm-YN";
+		}
+		reference "huawei-qos-cbqos.yang";
+	}
+
+	grouping qos-classifier {
+		leaf name {
+			type string;
+			mandatory true;
+			description "Name of QoS Classifier";
+		}
+		leaf operator {
+			type string;
+			description "or / and";
+		}
+		leaf remove {
+			type boolean;
+			description "remove-confirm-YN";
+		}
+		list rule-priorities {
+			uses rule-priority;
+		}
+		list rule-acls {
+			uses rule-acl;
+		}
+	}
+
+	grouping qos-behavior {
+		leaf name {
+			type string;
+			mandatory true;
+			description "Name of QoS Behavior";
+		}
+		leaf action {
+			type string;
+			mandatory true;
+			description "permit / deny";
+		}
+		leaf service-class {
+			type string;
+			description "be / af1 / af2 / af3 / af4 / ef / cs6 / cs7";
+		}
+		leaf color {
+			type string;
+			description "green / yellow / red";
+		}
+		leaf remove {
+			type boolean;
+			description "remove-confirm-YN";
+		}
+	}
+
+	grouping rule-priority {
+		leaf type {
+			type string;
+			mandatory true;
+			description "type of priority rule";
+		}
+		leaf value {
+			type string;
+			description "value for each priority rule type";
+		}
+		leaf remove {
+			type boolean;
+			description "remove-confirm-YN";
+		}
+	}
+
+	grouping rule-acl {
+		leaf name {
+			type string;
+			mandatory true;
+			description "rule - acl name";
+		}
+		leaf remove {
+			type boolean;
+			description "remove-confirm-YN";
+		}
+	}
+
+	grouping interface-config {
+		leaf admin-up {
+			type boolean;
+		}
+		leaf trap-enable {
+			type boolean;
+		}
+		leaf statistics-enable {
+			type boolean;
+		}
+		leaf mtu {
+			type uint16;
+		}
+		leaf ip-address {
+			type string;
+		}
+		leaf subnet-mask {
+			type string;
+		}
+	}
+
+	grouping port-listitem {
+		leaf port-id {
+			type string;
+			description "Port name in form of ID used in NETCONF";
+		}
+		leaf description {
+			type string;
+		}
+		leaf mode {
+			type string;
+			description "access-network-hybrid";
+		}
+		leaf mtu {
+			type uint16;
+		}
+		leaf qos {
+			type boolean;
+		}
+		leaf lldp {
+			type boolean;
+		}
+		leaf down-on-error {
+			type boolean;
+		}
+		leaf report-alarm {
+			type boolean;
+		}
+		leaf encap-type {
+        	type string;
+        	description "dot1q-null-qinq";
+        }
+		leaf lag {
+			type string;
+		}
+		leaf admin-up {
+			type boolean;
+		}
+	}
+
+	grouping if-listitem {
+		leaf if-name {
+			type string;
+			description "Interface name";
+		}
+		leaf ip-mask {
+			type string;
+			description "IP/Subnet in form of xxx.xxx.xxx.xxx/xx";
+		}
+		leaf port-id {
+			type string;
+			description "Port name in form of ID used in NETCONF";
+		}
+		leaf icmp {
+			type boolean;
+		}
+		leaf qos {
+			type boolean;
+		}
+		leaf bfd {
+			type boolean;
+		}
+		leaf ospf-area {
+			type string;
+		}
+		leaf mpls {
+			type boolean;
+		}
+		leaf rsvp {
+			type boolean;
+		}
+		leaf ldp {
+			type boolean;
+		}
+		leaf admin-up {
+			type boolean;
+		}
+	}
+
+	grouping peer-ip-listitem {
+		leaf peer-ip {
+			type string;
+		}
+		leaf ldp {
+			type boolean;
+		}
+		leaf tcp-password {
+			type string;
+		}
+		leaf preference {
+			type uint16;
+		}
+		leaf bgp-group {
+			type string;
+		}
+	}
+
+	grouping bgp-group-listitem {
+		leaf bgp-group {
+			type string;
+		}
+		leaf as-number {
+			type uint32 {
+//				length "1..11";
+			}
+		}
+		leaf cluster-id {
+			type string;
+		}
+	}
+
+	grouping mpls-tunnel-listitem {
+		leaf tunnel-name {
+			type string;
+		}
+		leaf target-ip {
+			type string;
+		}
+		leaf frr-method {
+			type string;
+			description "one-to-one or facility";
+		}
+	}
+
+	grouping cfg-compare-listitem {
+		leaf code {
+			type uint16 {
+//				length "1..11";
+			}
+		}
+		leaf parent-code {
+			type uint16 {
+//				length "1..11";
+			}
+		}
+        leaf default-code{
+             type uint16{
+//                length "1..11";
+             }
+             description "code of default schema to find cfg Object";
+        }
+		leaf name {
+			type string;
+			description "cfg property name";
+		}
+		leaf default {
+		    type string;
+		    description "default cfg value";
+		}
+		leaf current {
+		    type string;
+            description "current cfg value";
+		}
+		leaf level {
+			type uint16 {
+//				length "1..11";
+			}
+			description "hierarchy level";
+        }
+        leaf state {
+            type string;
+            description "property state - default, add, remove, missing, modify";
+        }
+        leaf class-type {
+            type string;
+            description "property model class type";
+        }
+
+	}
+
+	rpc get-rtp {
+		description "RPC to query tunnel selector configuration";
+		input {
+			leaf ip {
+				type string;
+				mandatory true;
+				description "IP address of device to query";
+			}
+			leaf session-owner {
+				type string;
+				description "username of northbound system user to reuse existing NETCONF session";
+			}
+		}
+		output {
+			uses rtp;
+		}
+	}
+
+	rpc set-rtp {
+		description "RPC to update tunnel selector configuration";
+		input {
+			leaf ip {
+				type string;
+				mandatory true;
+				description "IP address of device to update";
+			}
+			leaf session-owner {
+				type string;
+				description "username of northbound system user to reuse existing NETCONF session";
+			}
+			uses rtp;
+		}
+		output {
+			uses ipcm:general-output;
+		}
+	}
+
+	rpc get-bfd {
+		description "RPC to query BFD configuration";
+		input {
+			leaf ip {
+				type string;
+				mandatory true;
+				description "IP address of device to query";
+			}
+			leaf session-owner {
+				type string;
+				description "username of northbound system user to reuse existing NETCONF session";
+			}
+		}
+		output {
+			uses bfd;
+		}
+	}
+
+	rpc set-bfd {
+		description "RPC to update BFD configuration";
+		input {
+			leaf ip {
+				type string;
+				mandatory true;
+				description "IP address of device to update";
+			}
+			leaf session-owner {
+				type string;
+				description "username of northbound system user to reuse existing NETCONF session";
+			}
+			uses bfd;
+		}
+		output {
+			uses ipcm:general-output;
+		}
+	}
+
+	rpc get-bgp {
+		description "RPC to query BGP configuration";
+		input {
+			leaf ip {
+				type string;
+				mandatory true;
+				description "IP address of device to update";
+			}
+			leaf session-owner {
+				type string;
+				description "username of northbound system user to reuse existing NETCONF session";
+			}
+		}
+		output {
+			uses bgp;			
+		}
+	}
+
+	rpc set-bgp {
+		description "RPC to update BGP configuration";
+		input {
+			leaf ip {
+				type string;
+				mandatory true;
+				description "IP address of device to update";
+			}
+			leaf session-owner {
+				type string;
+				description "username of northbound system user to reuse existing NETCONF session";
+			}
+			uses bgp;
+		}
+		output {
+			uses ipcm:general-output;
+		}
+	}
+
+	rpc get-vpn {
+		description "RPC to query VPN instance data via NETCONF";
+		input {
+			leaf ip {
+				type string;
+				mandatory true;
+				description "IP address of device to update";
+			}
+			leaf session-owner {
+				type string;
+				description "username of northbound system user to reuse existing NETCONF session";
+			}
+			leaf vpn-name {
+				type string;
+				mandatory true;
+				description "Name of VPN to query. Currently LTE_VRF is the only one which is handled using NETCONF";
+			}
+		}
+		output {
+			uses vpn;
+			uses vpn-ifs;
+		}
+	}
+
+	rpc set-vpn {
+		description "RPC to create/update VPN. Currently used for LTE_VRF only.";
+		input {
+			leaf ip {
+				type string;
+				mandatory true;
+				description "IP address of device to update";
+			}
+			leaf session-owner {
+				type string;
+				description "username of northbound system user to reuse existing NETCONF session";
+			}
+			leaf vpn-name {
+				type string;
+				mandatory true;
+				description "Name of VPN to query interfaces. Currently LTE_VRF is the only one which is handled using NETCONF";
+			}
+			uses vpn;
+		}
+		output {
+			uses ipcm:general-output;
+		}
+	}
+
+	rpc get-acl {
+		description "RPC to query ACL configuration";
+		input {
+			leaf ip {
+				type string;
+				mandatory true;
+				description "IP address of device to query";
+			}
+			leaf session-owner {
+				type string;
+				description "username of northbound system user to reuse existing NETCONF session";
+			}
+		}
+		output {
+			uses acl;
+		}
+	}
+
+	rpc set-acl {
+		description "RPC to update ACL configuration";
+		input {
+			leaf ip {
+				type string;
+				mandatory true;
+				description "IP address of device to update";
+			}
+			leaf session-owner {
+				type string;
+				description "username of northbound system user to reuse existing NETCONF session";
+			}
+			uses acl;
+		}
+		output {
+			uses ipcm:general-output;
+		}
+	}
+
+	rpc get-qos {
+		description "RPC to query QoS configuration";
+		input {
+			leaf ip {
+				type string;
+				mandatory true;
+				description "IP address of device to query";
+			}
+			leaf session-owner {
+				type string;
+				description "username of northbound system user to reuse existing NETCONF session";
+			}
+		}
+		output {
+			uses qos;
+		}
+	}
+
+	rpc set-qos {
+		description "RPC to update QoS configuration";
+		input {
+			leaf ip {
+				type string;
+				mandatory true;
+				description "IP address of device to update";
+			}
+			leaf session-owner {
+				type string;
+				description "username of northbound system user to reuse existing NETCONF session";
+			}
+			uses qos;
+		}
+		output {
+			uses ipcm:general-output;
+		}
+	}
+
+	rpc get-if-config {
+		description "RPC to query interface configuration";
+		input {
+			leaf ip {
+				type string;
+				mandatory true;
+				description "IP address of device to query";
+			}
+			leaf if-name {
+				type string;
+				mandatory true;
+				description "Interface name to query";
+			}
+			leaf session-owner {
+				type string;
+				description "username of northbound system user to reuse existing NETCONF session";
+			}
+		}
+		output {
+			uses interface-config;
+		}
+	}
+
+	rpc set-if-config {
+		description "RPC to update interface configuration";
+		input {
+			leaf ip {
+				type string;
+				mandatory true;
+				description "IP address of device to update";
+			}
+			leaf if-name {
+				type string;
+				mandatory true;
+				description "Interface name to query";
+			}
+			leaf session-owner {
+				type string;
+				description "username of northbound system user to reuse existing NETCONF session";
+			}
+			uses interface-config;
+		}
+		output {
+			uses ipcm:general-output;
+		}
+	}
+
+	rpc get-vpn-ifs {
+		description "RPC to query vpn interfaces";
+		input {
+			leaf ip {
+				type string;
+				mandatory true;
+				description "IP address of device to query";
+			}
+			leaf session-owner {
+				type string;
+				description "username of northbound system user to reuse existing NETCONF session";
+			}
+			leaf vpn-name {
+				type string;
+				mandatory true;
+				description "Name of VPN to query interfaces. Currently LTE_VRF is the only one which is handled using NETCONF";
+			}
+		}
+		output {
+			uses vpn-ifs;
+		}
+	}
+
+	rpc set-vpn-ifs {
+		description "RPC to update interfaces";
+		input {
+			leaf ip {
+				type string;
+				mandatory true;
+				description "IP address of device to update";
+			}
+			leaf session-owner {
+				type string;
+				description "username of northbound system user to reuse existing NETCONF session";
+			}
+			leaf vpn-name {
+				type string;
+				mandatory true;
+				description "Name of VPN to add/remove interface(s). Currently LTE_VRF is the only one which is handled using NETCONF";
+			}
+			uses vpn-ifs;
+		}
+		output {
+			uses ipcm:general-output;
+		}
+	}
+
+	rpc check-default-cfg {
+		description "Check if default configuration for each category exists";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+		}
+		output {
+			leaf name {
+				type string;
+				description "Node name of device";
+			}
+			leaf vendor {
+				type string;
+				description "Vendor of device";
+			}
+			leaf admin-ip {
+				type string;
+				description "IP address for NETCONF connection";
+			}
+			leaf lsr-id {
+				type string;
+				description "IP address used to identify the device within network";
+			}
+			list check-result {
+				leaf category {
+					type string;
+					description "Configuration category that can be grouped together";
+				}
+				leaf result {
+					type string;
+					description "Check result for the given category";
+				}
+			}
+		}
+	}
+
+	rpc apply-default-cfg {
+		description "Check if default configuration for each category exists";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+			leaf category {
+				type string;
+				description "Configuration category to store default settings";
+			}
+		}
+		output {
+			uses ipcm:general-output;
+		}		
+	}
+
+	rpc show-cfg-cli {
+		description "Returns CLI view for given category";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+			leaf category {
+				type string;
+				description "Configuration category to store default settings";
+			}
+		}
+		output {
+			uses ipcm:general-output;
+		}		
+	}
+
+	rpc get-port-list {
+		description "Query port list for peer configuration";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+		}
+		output {
+			list ports {
+				uses port-listitem;
+			}
+		}
+	}
+
+	rpc set-port {
+		description "Set port configuration";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+			uses port-listitem;
+		}
+		output {
+			uses ipcm:general-output;
+		}		
+	}
+
+	rpc get-lag-list {
+		description "Query LAG list for peer configuration";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+		}
+		output {
+			list lags {
+				leaf lag-id {
+					type string;
+				}
+				leaf port-list {
+					type string;
+					description "list of ports included in the lag, separated by comma";
+				}
+				leaf admin-up {
+					type boolean;
+				}
+			}
+		}
+	}
+
+	rpc add-lag {
+		description "Create a new LAG";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+			leaf lag-id {
+				type string;
+			}
+			leaf port-list {
+				type string;
+				description "list of ports included in the lag, separated by comma";
+			}
+			leaf admin-up {
+				type boolean;
+			}
+		}
+		output {
+			uses ipcm:general-output;
+		}		
+	}
+
+	rpc set-lag {
+		description "Change LAG configuration";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+			leaf lag-id {
+				type string;
+			}
+			leaf port-list {
+				type string;
+				description "list of ports included in the lag, separated by comma";
+			}
+			leaf admin-up {
+				type boolean;
+			}
+		}
+		output {
+			uses ipcm:general-output;
+		}		
+	}
+
+	rpc remove-lag {
+		description "Remove existing LAG";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+			leaf lag-id {
+				type string;
+			}
+		}
+		output {
+			uses ipcm:general-output;
+		}				
+	}
+
+	rpc get-if-list {
+		description "Query interface list for peer configuration";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+		}
+		output {
+			list ifs {
+				uses if-listitem;
+			}
+		}
+	}
+
+	rpc add-if {
+		description "Create a new interface";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+			uses if-listitem;
+		}
+		output {
+			uses ipcm:general-output;
+		}				
+	}
+
+	rpc set-if {
+		description "Change configuration of existing interface";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+			uses if-listitem;
+		}
+		output {
+			uses ipcm:general-output;
+		}				
+	}
+
+	rpc remove-if {
+		description "Change configuration of existing interface";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+			leaf if-name {
+				type string;
+			}
+		}
+		output {
+			uses ipcm:general-output;
+		}				
+	}
+
+	rpc get-ospf-area-list {
+		description "Query OSPF Area list for peer configuration";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+		}
+		output {
+			list ospf-areas {
+				leaf ospf-area {
+					type string;
+				}
+			}
+		}			
+	}
+
+	rpc add-ospf-area {
+		description "Query OSPF Area list for peer configuration";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+			leaf ospf-area {
+				type string;
+			}
+		}
+		output {
+			uses ipcm:general-output;
+		}				
+	}
+
+	rpc remove-ospf-area {
+		description "Query OSPF Area list for peer configuration";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+			leaf ospf-area {
+				type string;
+			}
+		}
+		output {
+			uses ipcm:general-output;
+		}				
+	}
+
+	rpc get-peer-ip-list {
+		description "Query peer IP list for peer configuration";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+		}
+		output {
+			list peer-ips {
+				uses peer-ip-listitem;
+			}
+		}
+	}
+
+	rpc add-peer-ip {
+		description "Create a new peer IP";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+			uses peer-ip-listitem;
+		}
+		output {
+			uses ipcm:general-output;
+		}				
+	}
+
+	rpc set-peer-ip {
+		description "Change configuration of an existing peer IP";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+			uses peer-ip-listitem;
+		}
+		output {
+			uses ipcm:general-output;
+		}				
+	}
+
+	rpc remove-peer-ip {
+		description "Change configuration of an existing peer IP";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+			leaf peer-ip {
+				type string;
+			}
+		    leaf bgp-group {
+			    type string;
+		    }
+		}
+		output {
+			uses ipcm:general-output;
+		}				
+	}
+
+	rpc get-bgp-group-list {
+		description "Query BGP group list for peer configuration";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+		}
+		output {
+			list bgp-groups {
+				uses bgp-group-listitem;
+			}
+		}
+	}
+
+	rpc add-bgp-group {
+		description "Create a new BGP group";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+			uses bgp-group-listitem;
+		}
+		output {
+			uses ipcm:general-output;
+		}				
+	}
+
+	rpc set-bgp-group {
+		description "Change configuration of an existing BGP group";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+			uses bgp-group-listitem;
+		}
+		output {
+			uses ipcm:general-output;
+		}				
+	}
+
+	rpc remove-bgp-group {
+		description "Delete an existing BGP group";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+			leaf bgp-group {
+				type string;
+			}
+		}
+		output {
+			uses ipcm:general-output;
+		}				
+	}
+
+	rpc get-mpls-tunnel-list {
+		description "Query BGP group list for peer configuration";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+		}
+		output {
+			list tunnels {
+				uses mpls-tunnel-listitem;
+			}
+		}
+	}
+
+	rpc add-mpls-tunnel {
+		description "Create a new MPLS tunnel";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+			uses mpls-tunnel-listitem;
+		}
+		output {
+			uses ipcm:general-output;
+		}				
+	}
+
+	rpc set-mpls-tunnel {
+		description "Change configuration of an existing MPLS tunnel";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+			uses mpls-tunnel-listitem;
+		}
+		output {
+			uses ipcm:general-output;
+		}				
+	}
+
+	rpc remove-mpls-tunnel {
+		description "Delete an existing BGP group";
+		input {
+			leaf ip {
+				type string;
+				description "IP address of device to check configuration";
+			}
+			leaf name {
+				type string;
+				description "Node name of device in case when IP is unknown";
+			}
+			leaf tunnel-name {
+				type string;
+			}
+		}
+		output {
+			uses ipcm:general-output;
+		}				
+	}
+
+    rpc get-cfg-compare-list {
+        description "Compare configuration default and current";
+        input {
+            leaf ip {
+                type string;
+                description "IP address of device to check configuration";
+            }
+            leaf name {
+                type string;
+                description "Node name of device in case when IP is unknown";
+            }
+            leaf category {
+                type string;
+                description "config of catagory to compare";
+             }
+        }
+        output {
+            list compareList {
+                uses cfg-compare-listitem;
+            }
+        }
+    }
+
+    rpc modify-current-cfg {
+        description "Modify current configuration using default templete";
+        input {
+            leaf ip {
+                type string;
+                description "IP address of device to check configuration";
+            }
+            leaf name {
+                type string;
+                description "Node name of device in case when IP is unknown";
+            }
+            leaf category {
+                type string;
+                description "config of catagory to compare";
+             }
+            leaf modify-type {
+                 type string;
+                 description "config of catagory to compare";
+             }
+            leaf default-code{
+                 type uint16{
+ //                   length "1..11";
+                 }
+                 description "code of default schema to find cfg Object";
+            }
+            leaf class-type{
+                 type string;
+                 description "property model class type";
+            }
+        }
+        output {
+            uses ipcm:general-output;
+            list compareList {
+                uses cfg-compare-listitem;
+            }
+        }
+    }
+}
